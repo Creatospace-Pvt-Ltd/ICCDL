@@ -32,12 +32,12 @@ import cv2
 # cap.release()
 
 
-source = 'frame_1.jpg'
+source = 'anim_pose.png'
 results = model(source,save=True,imgsz=640,conf=0.2)
 for r in results:
-    print(r.keypoints)  # print the Keypoints object containing the detected keypoints
-# keypoints = results[0].keypoints[0].cpu().numpy()
-# print(keypoints)
+    for keypoint_idx,keypoints in enumerate(r.keypoints.xy):
+        print(keypoints)
+        cv2.putText(source,str(keypoint_idx),(int(keypoints[0]),int(keypoints[1])),cv2.FONT_HERSHEY_SIMPLEX)  
 
 #model.predict('frame_1.jpg', save=True, imgsz=320, conf=0.5,save_txt = True)
 
