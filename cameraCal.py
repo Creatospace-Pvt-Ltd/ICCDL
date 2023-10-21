@@ -7,7 +7,9 @@ import pickle
 
 ################ FIND CHESSBOARD CORNERS - OBJECT POINTS AND IMAGE POINTS #############################
 
-chessboardSize = (10,10)
+
+# changing the chessboardSize (9,6)
+chessboardSize = (9,6)
 frameSize = (640,480)
 
 
@@ -29,19 +31,21 @@ objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 
 
-images = glob.glob('*.jpeg') 
-
+images = glob.glob('*.jpg') 
 for image in images:
-
+    
     img = cv.imread(image)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     # Find the chess board corners
     ret, corners = cv.findChessboardCorners(gray, chessboardSize, None)
-
+    # if corners == True:
+    #     print("corner is True")
+    # else:
+    #     print("corners is False")
     # If found, add object points, image points (after refining them)
     if ret == True:
-
+        
         objpoints.append(objp)
         corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
         imgpoints.append(corners)
@@ -50,11 +54,10 @@ for image in images:
         cv.drawChessboardCorners(img, chessboardSize, corners2, ret)
         cv.imshow('img', img)
         cv.waitKey(1000)
+    
 
 
 cv.destroyAllWindows()
-
-
 
 
 ############## CALIBRATION #######################################################
@@ -65,6 +68,9 @@ ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints,
 pickle.dump((cameraMatrix, dist), open( "calibration.pkl", "wb" ))
 pickle.dump(cameraMatrix, open( "cameraMatrix.pkl", "wb" ))
 pickle.dump(dist, open( "dist.pkl", "wb" ))
+
+print(cameraMatrix)
+print(dist)
 
 
 # ############## UNDISTORTION #####################################################
