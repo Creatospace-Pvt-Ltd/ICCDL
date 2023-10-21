@@ -1,20 +1,22 @@
 from ultralytics import YOLO
+
+# Load a model
+model = YOLO("yolov8n-pose.pt")  # load a pretrained model (recommended for training)
+
+print("Hello World")
 import cv2 as cv
 import numpy as np
 import glob
 import pickle
 
-# Load a model
-model = YOLO("yolov8n-pose.pt")  # Load your YOLO model
 
-# Load camera calibration parameters
 cameraMatrix = pickle.load(open("cameraMatrix.pkl", "rb"))
 dist = pickle.load(open("dist.pkl", "rb"))
 
 
 def calculate_3d_coordinates(keypoints_2d):
     chessboardSize = (9, 6)
-    frameSize = (2560, 1440)
+    frameSize = (640, 480)
     # termination criteria
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -66,15 +68,13 @@ def calculate_3d_coordinates(keypoints_2d):
     pickle.dump(cameraMatrix, open("cameraMatrix.pkl", "wb"))
     pickle.dump(dist, open("dist.pkl", "wb"))
 
-    print("Camera_Matrix", cameraMatrix)
-    print("Distortion", dist)
-    print("Rotational", rvecs[0])
-    print("Translational", tvecs[0])
+    print(cameraMatrix)
+    print(dist)
+    print(rvecs)
+    print(tvecs)
 
     points_2d = np.array([keypoints_2d], dtype=np.float32)
-    points_3d = cv.projectPoints(
-        points_2d, rvecs[0], tvecs[0], cameraMatrix, dist, None, None, 0
-    )
+    points_3d = cv.projectPoints(points_2d, rvecs, tvecs, cameraMatrix, dist)
     x_3d, y_3d, z_3d = points_3d[0][0]
     print("points_3d", x_3d, y_3d, z_3d)
     return x_3d, y_3d, z_3d
@@ -86,6 +86,14 @@ source = "1.jpg"  # Load your image
 # Use YOLO to detect keypoints
 results = model(source, save=True, imgsz=640, conf=0.2)
 
+# Define a function to calculate 3D coordinates
+# def calculate_3d_coordinates(keypoint, camera_matrix, dist_coeffs):
+#     x, y = keypoint
+#     points_2d = np.array([[x, y]], dtype=np.float32)
+#     points_3d, _ = cv.projectPoints(points_2d, np.zeros((3, 1)), np.zeros((3, 1)), camera_matrix, dist_coeffs)
+#     x_3d, y_3d, z_3d = points_3d[0][0]
+#     return x_3d, y_3d, z_3d
+
 # Assuming you have detected keypoints in 'results'
 # keypoints should be a list of 2D coordinates, e.g., [(x1, y1), (x2, y2), ...]
 keypoints = []
@@ -96,8 +104,10 @@ for r in results:
 
 # Loop through keypoints and calculate 3D coordinates
 for i, keypoint in enumerate(keypoints):
-    keypoint_cpu = keypoint.cpu()  # Move the tensor from GPU to CPU
-    keypoint_np = keypoint_cpu.numpy()  # Convert to NumPy array
-    print(f"Keypoint {i}: {keypoint_np}")
-    x_3d, y_3d, z_3d = calculate_3d_coordinates(keypoint_np)
+    x_3d, y_3d, z_3d = calculate_3d_coordinates(keypoint)
     print(f"Keypoint {i}: 3D Coordinates: ({x_3d}, {y_3d}, {z_3d})")
+
+    # Calculate 3D coordinates for the keypoint
+    # x_3d, y_3d, z_3d = calculate_3d_coordinates((x, y))
+
+    # print(f"Keypoint {i}: 3D Coordinates: ({x_3d}, {y_3d}, {z_3d})")
