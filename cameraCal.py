@@ -71,6 +71,8 @@ pickle.dump(dist, open( "dist.pkl", "wb" ))
 
 print(cameraMatrix)
 print(dist)
+print(rvecs)
+print(tvecs)
 
 
 # ############## UNDISTORTION #####################################################
