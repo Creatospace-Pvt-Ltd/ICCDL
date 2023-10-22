@@ -177,8 +177,8 @@ def calculate_3d_coordinates(keypoint_mat):
         # z.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0])
         print(keypoint_mat[0][i])
         xp1.append(keypoint_mat[0][i][0])
-        xp2.append(keypoint_mat[0][i][1])
-        yp1.append(keypoint_mat[1][i][0])
+        xp2.append(keypoint_mat[1][i][0])
+        yp1.append(keypoint_mat[0][i][1])
         yp2.append(keypoint_mat[1][i][1])
         cord.append([get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0],get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0],
                      get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0]])
@@ -252,7 +252,7 @@ def calculate_3d_coordinates(keypoint_mat):
     # Add labels and a title for the 2D plot
     plt.xlim(0, 2560)  # Set x-axis limits
     plt.ylim(0, 1440)  # Set y-axis limits
-    
+
     plt.xlabel('X-axis')
     plt.ylabel('Y-axis')
     plt.title('2D Scatter Plot 2')
@@ -293,5 +293,54 @@ calculate_3d_coordinates(keypoint_mat)
 # Loop through keypoints and calculate 3D coordinates
 
 #     print(f"Keypoint {i}: {keypoint_np}")
+def coord_to_array(arr):
+    temp = []
+    for i in arr:
+        temp.append(i[0])
     
+    return temp
+
+def get_pelvispoint(coord):
+    pel_x = (coord[12][0] + coord[13][0])/2
+    pel_y = (coord[12][1] + coord[13][1])/2
+    pel_z = (coord[12][2] + coord[13][2])/2
+
+    return [pel_x, pel_y, pel_z]
+
+def get_neckpoint(coord):
+    pel_x = (coord[5][0] + coord[6][0])/2
+    pel_y = (coord[5][1] + coord[6][1])/2
+    pel_z = (coord[5][2] + coord[6][2])/2
+
+    return [pel_x, pel_y, pel_z]
+
+# calculating angle between final & initial pose
+def calculate_delta(coord, pose):
+
+    #Initial Bone vectors
+    pelvis_i = [coord_to_array(coord[12]), coord_to_array(coord[13])]
+    spine_i = [get_pelvispoint(coord), get_neckpoint(coord)]
+    shoulder_i = [coord_to_array(coord[5]), coord_to_array(coord[6])]
+    neck_i = [coord_to_array(coord[0]), get_neckpoint(coord)]
+    upperarm_l_i = [coord_to_array(coord[5]), coord_to_array(coord[7])]
+    upperarm_r_i = [coord_to_array(coord[6]), coord_to_array(coord[8])]
+    lowerarm_l_i = [coord_to_array(coord[7]), coord_to_array(coord[9])]
+    lowerarm_r_i = [coord_to_array(coord[8]), coord_to_array(coord[10])]
+    thigh_l_i = [coord_to_array(coord[11]), coord_to_array(coord[13])]
+    thigh_r_i = [coord_to_array(coord[12]), coord_to_array(coord[14])]
+    calf_l_i = [coord_to_array(coord[13]), coord_to_array(coord[15])]
+    calf_l_i = [coord_to_array(coord[14]), coord_to_array(coord[16])]
+
+    pelvis_f = [coord_to_array(pose[12]), coord_to_array(pose[13])]
+    spine_f = [get_pelvispoint(pose), get_neckpoint(pose)]
+    shoulder_f = [coord_to_array(pose[5]), coord_to_array(pose[6])]
+    neck_f = [coord_to_array(pose[0]), get_neckpoint(pose)]
+    upperarm_l_f = [coord_to_array(pose[5]), coord_to_array(pose[7])]
+    upperarm_r_f = [coord_to_array(pose[6]), coord_to_array(pose[8])]
+    lowerarm_l_f = [coord_to_array(pose[7]), coord_to_array(pose[9])]
+    lowerarm_r_f = [coord_to_array(pose[8]), coord_to_array(pose[10])]
+    thigh_l_f = [coord_to_array(pose[11]), coord_to_array(pose[13])]
+    thigh_r_f = [coord_to_array(pose[12]), coord_to_array(pose[14])]
+    calf_l_f = [coord_to_array(pose[13]), coord_to_array(pose[15])]
+    calf_l_f = [coord_to_array(pose[14]), coord_to_array(pose[16])]
 
