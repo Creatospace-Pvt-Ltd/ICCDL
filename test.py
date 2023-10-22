@@ -151,6 +151,7 @@ def calculate_3d_coordinates(keypoint_mat):
     y =[]
     z =[]
     results=[]
+    cord = []
     for i in range(0,2):
         retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[i],imgpoints_n[i] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
         print("npn Fucntion results")
@@ -163,48 +164,41 @@ def calculate_3d_coordinates(keypoint_mat):
         R_value.append(R)
     print("Which Keypoint?",keypoint_mat[0][1])
     for i in range(0,17):
-        results = get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])
-
-    
+        print(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1]))
+        # x.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0])
+        # y.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0])
+        # z.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0])
+        cord.append([get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0],get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0],
+                     get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0]])
     import matplotlib.pyplot as plt
     from mpl_toolkits import mplot3d
+    from mpl_toolkits.mplot3d import Axes3D
 
-
-# Your data
     # Create a figure and a 3D axis
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # Define the data points
-    data = [[-41.189, 183.94, -370.15]]
-    for i in x,y,z:
-        x1 = [point[i] for point in x]
-        y1 = [point[i] for point in y]
-        z1 = [point[i] for point in z]
+    # Create example data points (replace this with your data)
+    cord = np.array(cord)
     # Extract x, y, and z coordinates
-
+    x = cord[:, 0]
+    y = cord[:, 1]
+    z = cord[:, 2]
+    print("Printing")
+    print(x)
+    print("y",y)
+    print("z",z)
     # Plot the points
-        ax.scatter(x, y, z, c='b', marker='o')
+    ax.scatter(x, y, z, c='b', marker='o')
 
     # Set labels for the axes
-        ax.set_xlabel('X Axis')
-        ax.set_ylabel('Y Axis')
-        ax.set_zlabel('Z Axis')
+    ax.set_xlabel('X Axis')
+    ax.set_ylabel('Y Axis')
+    ax.set_zlabel('Z Axis')
 
     # Show the plot
-        plt.show()
+    plt.show()
 
-    # # Create a 3D figure
-    # fig = plt.figure()
-    # ax = plt.axes(projection='3d')
-    # # Plot the data
-    # ax.plot3D(x, y, z)
-
-    # # Add a title
-    # ax.set_title('3D Plot')
-
-    # # Show the plot
-    # plt.show()
     
     # return retval, rvec_n, tvec_n
 
