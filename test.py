@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 import pickle
 
-def calculate_3d_coordinates(points_2d):
+def calculate_3d_coordinates():
     chessboardSize = (6, 6)
     frameSize = (500, 300)
     # termination criteria
@@ -75,10 +75,11 @@ def calculate_3d_coordinates(points_2d):
     with open("dist.pkl", "wb") as f:
         pickle.dump(dist, f)
 
-    print("Camera_Matrix", cameraMatrix)
-    print("Distortion", dist)
-    print("Rotational", rvecs[0])
-    print("Translational", tvecs[0])
+    # printing the matrix
+    # print("Camera_Matrix", cameraMatrix)
+    # print("Distortion", dist)
+    # print("Rotational", rvecs[0])
+    # print("Translational", tvecs[0])
 
     
     
@@ -111,16 +112,6 @@ def calculate_3d_coordinates(points_2d):
     # assert dist_n.shape[1] in (4, 5), "dist_n should be a 1x4 or 1x5 array."
 
 
-
-    def check_null_argument(args):
-        for arg in args:
-            if arg is None:
-                return "dikkat hai"
-        return "sb theek h"
-
-    args = [points_2d, rvec, tvec, CameraMatrix, dist_n]
-    print(check_null_argument(args))
-
     
     npoints = len(objectpoint_n)
 
@@ -139,22 +130,26 @@ source = glob.glob("*.jpg")
 #source = "2.jpg"  # Load your image
 
 # Use YOLO to detect keypoints
-for img in source:
-    results = model(source, save=True, imgsz=640, conf=0.2)
+# for img in source:
+#     results = model(source, save=True, imgsz=640, conf=0.2)
 
 # Assuming you have detected keypoints in 'results'
 # keypoints should be a list of 2D coordinates, e.g., [(x1, y1), (x2, y2), ...]
-keypoints = []
+# keypoints = []
 
-for r in results:
-    for keypoint in r.keypoints.xy:
-        keypoints.append(keypoint)
+# for r in results:
+#     for keypoint in r.keypoints.xy:
+#         keypoints.append(keypoint)
+
+
+retval, rev, tra = calculate_3d_coordinates()
+print("Rotational_matrix (from calibration)")
+print(rev.shape)
+
 
 # Loop through keypoints and calculate 3D coordinates
-for i, keypoint in enumerate(keypoints):
-    keypoint_cpu = keypoint.cpu()  # Move the tensor from GPU to CPU
-    keypoint_np = keypoint_cpu.numpy()  # Convert to NumPy array
-    print(f"Keypoint {i}: {keypoint_np}")
-    calculate_3d_coordinates(keypoint_np)
-    retval, rev, tra = calculate_3d_coordinates(keypoint_np)
-    print(f"values: ({retval}, {rev}, {tra})")
+# for i, keypoint in enumerate(keypoints):
+#     keypoint_cpu = keypoint.cpu()  # Move the tensor from GPU to CPU
+#     keypoint_np = keypoint_cpu.numpy()  # Convert to NumPy array
+#     print(f"Keypoint {i}: {keypoint_np}")
+    
