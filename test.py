@@ -124,14 +124,7 @@ def calculate_3d_coordinates(points_2d):
     
     npoints = len(objectpoint_n)
 
-    if npoints >= 4:
-        print("Everything looks fine.")
-        print("Number of 3D points:", npoints)
-    else:
-        print("There may be a problem.")
-        print("Number of 3D points:", npoints)
-
-    print("Data Type of objectPoints_n:", objectpoint_n.dtype)
+    
 
     retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[0],imgpoints_n[0] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
 
