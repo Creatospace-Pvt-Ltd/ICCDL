@@ -48,7 +48,7 @@ def get_xyz(camera1_coords, camera1_M, camera1_R, camera1_T, camera2_coords, cam
 
 def calculate_3d_coordinates(keypoint_mat):
     chessboardSize = (6, 6)
-    frameSize = (500, 300)
+    frameSize = (2560, 1440)
     # termination criteria
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -63,9 +63,12 @@ def calculate_3d_coordinates(keypoint_mat):
     objpoints = []  # 3D point in real world space
     imgpoints = []  # 2D points in image plane.
 
-    images = glob.glob("*.jpg")
+    images = glob.glob("*.jpeg")
+    print(images)
     for image in images:
         img = cv2.imread(image)
+        cv.imshow('nbueffiuejferfefefsa', img)
+        cv.waitKey(0)
         img = cv2.resize(img, frameSize)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.imshow('chl ja', gray)
@@ -152,6 +155,10 @@ def calculate_3d_coordinates(keypoint_mat):
     z =[]
     results=[]
     cord = []
+    xp1 =[]
+    yp1 =[]
+    xp2 =[]
+    yp2 =[]
     for i in range(0,2):
         retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[i],imgpoints_n[i] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
         print("npn Fucntion results")
@@ -168,6 +175,11 @@ def calculate_3d_coordinates(keypoint_mat):
         # x.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0])
         # y.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0])
         # z.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0])
+        print(keypoint_mat[0][i])
+        xp1.append(keypoint_mat[0][i][0])
+        xp2.append(keypoint_mat[0][i][1])
+        yp1.append(keypoint_mat[1][i][0])
+        yp2.append(keypoint_mat[1][i][1])
         cord.append([get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0],get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0],
                      get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0]])
     import matplotlib.pyplot as plt
@@ -191,6 +203,7 @@ def calculate_3d_coordinates(keypoint_mat):
     # Plot the points
     ax.scatter(x, y, z, c='b', marker='o')
 
+    
     # Set labels for the axes
     ax.set_xlabel('X Axis')
     ax.set_ylabel('Y Axis')
@@ -198,21 +211,61 @@ def calculate_3d_coordinates(keypoint_mat):
 
     # Show the plot
     plt.show()
-
     
     # return retval, rvec_n, tvec_n
 
+    xp1=np.array(xp1)
+    yp1=np.array(yp1)
+    xp2=np.array(xp2)
+    yp2=np.array(yp2)
 
+    print(xp1, xp2)
+    # Define marker size (adjust as needed)
+    marker_size = 50  # Set the size you prefer
+    # Create a 2D scatter plot
+    plt.figure()  # Create a new figure for the 2D plot
+    # Create a scatter plot with marker size
+    plt.scatter(xp1, yp1, label='Scatter Plot', color='b', marker='o', s=marker_size)
 
+   
+   
+
+    # Add labels and a title for the 2D plot
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('2D Scatter Plot 1')
+    # plt.scatter(xp2, yp2, label='Scatter Plot', color='b', marker='o')
+    plt.xlim(0, 2560)  # Set x-axis limits
+    plt.ylim(0, 1440)  # Set y-axis limits
+    # # Add labels and a title
+    # plt.xlabel('X-axis')
+    # plt.ylabel('Y-axis')
+    # plt.title('Scatter Plot 2')
+    # # Add a legend
+    # plt.legend()
+
+    # Show the plot
+    plt.show()
+
+    plt.figure()
+    plt.scatter(xp2, yp2, label='2D Scatter Plot', color='r', marker='o', s=marker_size)
+    # Add labels and a title for the 2D plot
+    plt.xlim(0, 2560)  # Set x-axis limits
+    plt.ylim(0, 1440)  # Set y-axis limits
+    
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('2D Scatter Plot 2')
+    plt.show()
 
 # execution starts
 # Load an image or use YOLO to detect keypoints
-source = glob.glob("*.jpg")
+source = glob.glob("*.jpeg")
 #source = "2.jpg"  # Load your image
 
 # Use YOLO to detect keypoints
 for img in source:
-    results = model(source, save=True, imgsz=640, conf=0.2)
+    results = model(source, save=True, imgsz=2560, conf=0.2)
 
 # Assuming you have detected keypoints in 'results'
 # keypoints should be a list of 2D coordinates, e.g., [(x1, y1), (x2, y2), ...]
