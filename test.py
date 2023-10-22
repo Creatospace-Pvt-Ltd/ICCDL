@@ -16,7 +16,37 @@ import cv2
 import numpy as np
 import pickle
 
-def calculate_3d_coordinates():
+
+def get_xyz(camera1_coords, camera1_M, camera1_R, camera1_T, camera2_coords, camera2_M, camera2_R, camera2_T):
+    # Get the two key equations from camera1
+    
+    camera1_u, camera1_v = camera1_coords
+    # Put the rotation and translation side by side and then multiply with camera matrix
+    camera1_P = camera1_M.dot(np.column_stack((camera1_R,camera1_T)))
+    # Get the two linearly independent equation referenced in the notes
+    camera1_vect1 = camera1_v*camera1_P[2,:]-camera1_P[1,:]
+    camera1_vect2 = camera1_P[0,:] - camera1_u*camera1_P[2,:]
+    
+    # Get the two key equations from camera2
+    camera2_u, camera2_v = camera2_coords
+    # Put the rotation and translation side by side and then multiply with camera matrix
+    camera2_P = camera2_M.dot(np.column_stack((camera2_R,camera2_T)))
+    # Get the two linearly independent equation referenced in the notes
+    camera2_vect1 = camera2_v*camera2_P[2,:]-camera2_P[1,:]
+    camera2_vect2 = camera2_P[0,:] - camera2_u*camera2_P[2,:]
+    
+    # Stack the 4 rows to create one 4x3 matrix
+    full_matrix = np.row_stack((camera1_vect1, camera1_vect2, camera2_vect1, camera2_vect2))
+    # The first three columns make up A and the last column is b
+    A = full_matrix[:, :3]
+    b = full_matrix[:, 3].reshape((4, 1))
+    # Solve overdetermined system. Note b in the wikipedia article is -b here.
+    # https://en.wikipedia.org/wiki/Overdetermined_system
+    soln = np.linalg.inv(A.T.dot(A)).dot(A.T).dot(-b)
+    return soln
+
+
+def calculate_3d_coordinates(keypoint_mat):
     chessboardSize = (6, 6)
     frameSize = (500, 300)
     # termination criteria
@@ -114,12 +144,69 @@ def calculate_3d_coordinates():
 
     
     npoints = len(objectpoint_n)
+    
+    R_value = []
+    T_value = []
+    x =[]
+    y =[]
+    z =[]
+    results=[]
+    for i in range(0,2):
+        retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[i],imgpoints_n[i] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
+        print("npn Fucntion results")
+        print(retval,rvec_n,tvec_n)
+        T_value.append(tvec_n)
+
+        print("Calculating R matrix")
+        R, jac = cv2.Rodrigues(rvec_n)
+        print(R)
+        R_value.append(R)
+    print("Which Keypoint?",keypoint_mat[0][1])
+    for i in range(0,17):
+        results = get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])
 
     
+    import matplotlib.pyplot as plt
+    from mpl_toolkits import mplot3d
 
-    retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[0],imgpoints_n[0] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
 
-    return retval, rvec_n, tvec_n
+# Your data
+    # Create a figure and a 3D axis
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Define the data points
+    data = [[-41.189, 183.94, -370.15]]
+    for i in x,y,z:
+        x1 = [point[i] for point in x]
+        y1 = [point[i] for point in y]
+        z1 = [point[i] for point in z]
+    # Extract x, y, and z coordinates
+
+    # Plot the points
+        ax.scatter(x, y, z, c='b', marker='o')
+
+    # Set labels for the axes
+        ax.set_xlabel('X Axis')
+        ax.set_ylabel('Y Axis')
+        ax.set_zlabel('Z Axis')
+
+    # Show the plot
+        plt.show()
+
+    # # Create a 3D figure
+    # fig = plt.figure()
+    # ax = plt.axes(projection='3d')
+    # # Plot the data
+    # ax.plot3D(x, y, z)
+
+    # # Add a title
+    # ax.set_title('3D Plot')
+
+    # # Show the plot
+    # plt.show()
+    
+    # return retval, rvec_n, tvec_n
 
 
 
@@ -130,26 +217,34 @@ source = glob.glob("*.jpg")
 #source = "2.jpg"  # Load your image
 
 # Use YOLO to detect keypoints
-# for img in source:
-#     results = model(source, save=True, imgsz=640, conf=0.2)
+for img in source:
+    results = model(source, save=True, imgsz=640, conf=0.2)
 
 # Assuming you have detected keypoints in 'results'
 # keypoints should be a list of 2D coordinates, e.g., [(x1, y1), (x2, y2), ...]
-# keypoints = []
+keypoints = []
 
-# for r in results:
-#     for keypoint in r.keypoints.xy:
-#         keypoints.append(keypoint)
+for r in results:
+    for keypoint in r.keypoints.xy:
+        keypoints.append(keypoint)
 
+keypoint_mat = []
 
-retval, rev, tra = calculate_3d_coordinates()
-print("Rotational_matrix (from calibration)")
-print(rev.shape)
+for i, keypoint in enumerate(keypoints):
+    keypoint_cpu = keypoint.cpu()  # Move the tensor from GPU to CPU
+    keypoint_np = keypoint_cpu.numpy()  # Convert to NumPy array
+    print(keypoint_np)
+    keypoint_mat.append(keypoint_np) 
+
+calculate_3d_coordinates(keypoint_mat)
+# print("Rotational_matrix (from calibration)")
+# print(rvec,tra)
+# cv2.solvePnP will give you a vector for the rotation matrix,
+# so you need to convert this to a 3x3 matrix using the following line:
 
 
 # Loop through keypoints and calculate 3D coordinates
-# for i, keypoint in enumerate(keypoints):
-#     keypoint_cpu = keypoint.cpu()  # Move the tensor from GPU to CPU
-#     keypoint_np = keypoint_cpu.numpy()  # Convert to NumPy array
+
 #     print(f"Keypoint {i}: {keypoint_np}")
     
+
