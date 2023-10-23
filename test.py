@@ -16,6 +16,26 @@ import cv2
 import numpy as np
 import pickle
 
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
+
+import argparse
+import random
+import time
+
+from pythonosc import udp_client
+
+def osc_client():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip", default="127.0.0.1",
+      help="The ip of the OSC server")
+    parser.add_argument("--port", type=int, default=5005,
+      help="The port the OSC server is listening on")
+    args = parser.parse_args()
+
+    client = udp_client.SimpleUDPClient(args.ip, args.port)
+    return client
 
 def get_xyz(camera1_coords, camera1_M, camera1_R, camera1_T, camera2_coords, camera2_M, camera2_R, camera2_T):
     # Get the two key equations from camera1
@@ -48,7 +68,7 @@ def get_xyz(camera1_coords, camera1_M, camera1_R, camera1_T, camera2_coords, cam
 
 def calculate_3d_coordinates(keypoint_mat):
     chessboardSize = (6, 6)
-    frameSize = (500, 300)
+    frameSize = (2560, 1440)
     # termination criteria
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -63,9 +83,12 @@ def calculate_3d_coordinates(keypoint_mat):
     objpoints = []  # 3D point in real world space
     imgpoints = []  # 2D points in image plane.
 
-    images = glob.glob("*.jpg")
+    images = glob.glob("*.jpeg")
+    print(images)
     for image in images:
         img = cv2.imread(image)
+        cv.imshow('nbueffiuejferfefefsa', img)
+        cv.waitKey(0)
         img = cv2.resize(img, frameSize)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.imshow('chl ja', gray)
@@ -152,6 +175,15 @@ def calculate_3d_coordinates(keypoint_mat):
     z =[]
     results=[]
     cord = []
+    pose = []
+    xp1 =[]
+    yp1 =[]
+    xp2 =[]
+    yp2 =[]
+    xp1f =[]
+    yp1f =[]
+    xp2f =[]
+    yp2f =[]
     for i in range(0,2):
         retval, rvec_n, tvec_n = cv2.solvePnP(objectpoint_n[i],imgpoints_n[i] , CameraMatrix, dist_n, flags=cv2.SOLVEPNP_ITERATIVE)
         print("npn Fucntion results")
@@ -168,11 +200,27 @@ def calculate_3d_coordinates(keypoint_mat):
         # x.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0])
         # y.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0])
         # z.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0])
+        print(keypoint_mat[0][i])
+        # xp1.append(keypoint_mat[0][i][0])
+        # xp2.append(keypoint_mat[1][i][0])
+        # yp1.append(keypoint_mat[0][i][1])
+        # yp2.append(keypoint_mat[1][i][1])
         cord.append([get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0],get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0],
                      get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0]])
-    import matplotlib.pyplot as plt
-    from mpl_toolkits import mplot3d
-    from mpl_toolkits.mplot3d import Axes3D
+        
+    for i in range(0,17):
+        print(get_xyz(keypoint_mat[2][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[3][i],CameraMatrix,R_value[1],T_value[1]))
+        # x.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[0][0])
+        # y.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[1][0])
+        # z.append(get_xyz(keypoint_mat[0][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[1][i],CameraMatrix,R_value[1],T_value[1])[2][0])
+        print(keypoint_mat[2][i])
+        xp1.append(keypoint_mat[2][i][0])
+        xp2.append(keypoint_mat[3][i][0])
+        yp1.append(keypoint_mat[2][i][1])
+        yp2.append(keypoint_mat[3][i][1])
+        pose.append([get_xyz(keypoint_mat[3][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[2][i],CameraMatrix,R_value[1],T_value[1])[0][0],get_xyz(keypoint_mat[3][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[2][i],CameraMatrix,R_value[1],T_value[1])[1][0],
+                     get_xyz(keypoint_mat[3][i],CameraMatrix,R_value[0],T_value[0],keypoint_mat[2][i],CameraMatrix,R_value[1],T_value[1])[2][0]])
+    
 
     # Create a figure and a 3D axis
     fig = plt.figure()
@@ -189,8 +237,15 @@ def calculate_3d_coordinates(keypoint_mat):
     print("y",y)
     print("z",z)
     # Plot the points
-    ax.scatter(x, y, z, c='b', marker='o')
+    pose = np.array(pose)
+    xf = pose[:, 0]
+    yf = pose[:, 1]
+    zf = pose[:, 2]
+    ax.scatter(xf, yf, zf, c='b', marker='o')
+    ax.scatter(x, y, z, c='r', marker='o')
+    
 
+    
     # Set labels for the axes
     ax.set_xlabel('X Axis')
     ax.set_ylabel('Y Axis')
@@ -198,21 +253,61 @@ def calculate_3d_coordinates(keypoint_mat):
 
     # Show the plot
     plt.show()
-
     
     # return retval, rvec_n, tvec_n
 
+    xp1=np.array(xp1)
+    yp1=np.array(yp1)
+    xp2=np.array(xp2)
+    yp2=np.array(yp2)
 
+    print(xp1, xp2)
+    # Define marker size (adjust as needed)
+    marker_size = 50  # Set the size you prefer
+    # Create a 2D scatter plot
+    plt.figure()  # Create a new figure for the 2D plot
+    # Create a scatter plot with marker size
+    plt.scatter(xp1, yp1, label='Scatter Plot', color='b', marker='o', s=marker_size)
 
+   
+   
+
+    # Add labels and a title for the 2D plot
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('2D Scatter Plot 1')
+    # plt.scatter(xp2, yp2, label='Scatter Plot', color='b', marker='o')
+    plt.xlim(0, 2560)  # Set x-axis limits
+    plt.ylim(0, 1440)  # Set y-axis limits
+    # # Add labels and a title
+    # plt.xlabel('X-axis')
+    # plt.ylabel('Y-axis')
+    # plt.title('Scatter Plot 2')
+    # # Add a legend
+    # plt.legend()
+
+    # Show the plot
+    plt.show()
+
+    plt.figure()
+    plt.scatter(xp2, yp2, label='2D Scatter Plot', color='r', marker='o', s=marker_size)
+    # Add labels and a title for the 2D plot
+    plt.xlim(0, 2560)  # Set x-axis limits
+    plt.ylim(0, 1440)  # Set y-axis limits
+
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('2D Scatter Plot 2')
+    plt.show()
 
 # execution starts
 # Load an image or use YOLO to detect keypoints
-source = glob.glob("*.jpg")
+source = glob.glob("*.jpeg")
 #source = "2.jpg"  # Load your image
 
 # Use YOLO to detect keypoints
 for img in source:
-    results = model(source, save=True, imgsz=640, conf=0.2)
+    results = model(source, save=True, imgsz=2560, conf=0.2)
 
 # Assuming you have detected keypoints in 'results'
 # keypoints should be a list of 2D coordinates, e.g., [(x1, y1), (x2, y2), ...]
@@ -240,5 +335,108 @@ calculate_3d_coordinates(keypoint_mat)
 # Loop through keypoints and calculate 3D coordinates
 
 #     print(f"Keypoint {i}: {keypoint_np}")
+def coord_to_array(arr):
+    temp = []
+    for i in arr:
+        temp.append(i[0])
     
+    return temp
 
+def get_pelvispoint(coord):
+    pel_x = (coord[12][0] + coord[13][0])/2
+    pel_y = (coord[12][1] + coord[13][1])/2
+    pel_z = (coord[12][2] + coord[13][2])/2
+
+    return [pel_x, pel_y, pel_z]
+
+def get_neckpoint(coord):
+    pel_x = (coord[5][0] + coord[6][0])/2
+    pel_y = (coord[5][1] + coord[6][1])/2
+    pel_z = (coord[5][2] + coord[6][2])/2
+
+    return [pel_x, pel_y, pel_z]
+
+def delta_rotation(v, u):
+   
+    # Define the initial and final vectors
+    initial_vector = u
+    final_vector = v
+
+    # Calculate the direction cosines
+    cosine_x = np.dot(final_vector, [1, 0, 0]) / (np.linalg.norm(final_vector) * np.linalg.norm([1, 0, 0]))
+    cosine_y = np.dot(final_vector, [0, 1, 0]) / (np.linalg.norm(final_vector) * np.linalg.norm([0, 1, 0]))
+    cosine_z = np.dot(final_vector, [0, 0, 1]) / (np.linalg.norm(final_vector) * np.linalg.norm([0, 0, 1]))
+
+    # Calculate the angles in radians
+    angle_x = np.arccos(cosine_x)
+    angle_y = np.arccos(cosine_y)
+    angle_z = np.arccos(cosine_z)
+
+    # Convert the angles to degrees
+    angle_x_degrees = np.degrees(angle_x)
+    angle_y_degrees = np.degrees(angle_y)
+    angle_z_degrees = np.degrees(angle_z)
+
+    print(f"Change in angle along the x-axis: {angle_x_degrees:.2f} degrees")
+    print(f"Change in angle along the y-axis: {angle_y_degrees:.2f} degrees")
+    print(f"Change in angle along the z-axis: {angle_z_degrees:.2f} degrees")
+
+    return [angle_x_degrees, angle_y_degrees, angle_z_degrees]
+
+
+# calculating angle between final & initial pose
+def calculate_delta(coord, pose):
+
+    #Initial Bone vectors
+    pelvis_i = [coord_to_array(coord[12]), coord_to_array(coord[13])]
+    spine_i = [get_pelvispoint(coord), get_neckpoint(coord)]
+    shoulder_i = [coord_to_array(coord[5]), coord_to_array(coord[6])]
+    neck_i = [coord_to_array(coord[0]), get_neckpoint(coord)]
+    upperarm_l_i = [coord_to_array(coord[5]), coord_to_array(coord[7])]
+    upperarm_r_i = [coord_to_array(coord[6]), coord_to_array(coord[8])]
+    lowerarm_l_i = [coord_to_array(coord[7]), coord_to_array(coord[9])]
+    lowerarm_r_i = [coord_to_array(coord[8]), coord_to_array(coord[10])]
+    thigh_l_i = [coord_to_array(coord[11]), coord_to_array(coord[13])]
+    thigh_r_i = [coord_to_array(coord[12]), coord_to_array(coord[14])]
+    calf_l_i = [coord_to_array(coord[13]), coord_to_array(coord[15])]
+    calf_r_i = [coord_to_array(coord[14]), coord_to_array(coord[16])]
+
+    pelvis_f = [coord_to_array(pose[12]), coord_to_array(pose[13])]
+    spine_f = [get_pelvispoint(pose), get_neckpoint(pose)]
+    shoulder_f = [coord_to_array(pose[5]), coord_to_array(pose[6])]
+    neck_f = [coord_to_array(pose[0]), get_neckpoint(pose)]
+    upperarm_l_f = [coord_to_array(pose[5]), coord_to_array(pose[7])]
+    upperarm_r_f = [coord_to_array(pose[6]), coord_to_array(pose[8])]
+    lowerarm_l_f = [coord_to_array(pose[7]), coord_to_array(pose[9])]
+    lowerarm_r_f = [coord_to_array(pose[8]), coord_to_array(pose[10])]
+    thigh_l_f = [coord_to_array(pose[11]), coord_to_array(pose[13])]
+    thigh_r_f = [coord_to_array(pose[12]), coord_to_array(pose[14])]
+    calf_l_f = [coord_to_array(pose[13]), coord_to_array(pose[15])]
+    calf_r_f = [coord_to_array(pose[14]), coord_to_array(pose[16])]
+
+    pelvis_rotation = delta_rotation(pelvis_f[0]-pelvis_f[1], pelvis_i[0]-pelvis_i[1])
+    spine_rotation = delta_rotation(spine_f[0]-spine_f[1], spine_i[0]-spine_i[1])
+    shoulder_rotation = delta_rotation(shoulder_f[0]-shoulder_f[1], shoulder_i[0]-shoulder_i[1])
+    neck_rotation = delta_rotation(neck_f[0]-neck_f[1], neck_i[0]-neck_i[1])
+    upperarm_l_rotation = delta_rotation(upperarm_l_f[0]-upperarm_l_f[1], upperarm_l_i[0]-upperarm_l_i[1])
+    upperarm_r_rotation = delta_rotation(upperarm_r_f[0]-upperarm_r_f[1], upperarm_r_i[0]-upperarm_r_i[1])
+    lowerarm_l_rotation = delta_rotation(lowerarm_l_f[0]-lowerarm_l_f[1], lowerarm_l_i[0]-lowerarm_l_i[1])
+    lowerarm_r_rotation = delta_rotation(lowerarm_r_f[0]-lowerarm_r_f[1], lowerarm_r_i[0]-lowerarm_r_i[1])
+    thigh_l_rotation = delta_rotation(thigh_l_f[0]-thigh_l_f[1], thigh_l_i[0]-thigh_l_i[1])
+    thigh_r_rotation = delta_rotation(thigh_r_f[0]-thigh_r_f[1], thigh_r_i[0]-thigh_r_i[1])
+    calf_l_rotation = delta_rotation(calf_l_f[0]-calf_l_f[1], calf_l_i[0]-calf_l_i[1])
+    calf_r_rotation = delta_rotation(calf_r_f[0]-calf_r_f[1], calf_r_i[0]-calf_r_i[1])
+
+    client = osc_client()
+    client.send_message("/pelvis", pelvis_rotation)
+    client.send_message("/spine", spine_rotation)
+    client.send_message("/shoulder", shoulder_rotation)
+    client.send_message("/neck", neck_rotation)
+    client.send_message("/upperarm_l", upperarm_l_rotation)
+    client.send_message("/upperarm_r", upperarm_r_rotation)
+    client.send_message("/lowerarm_l", lowerarm_l_rotation)
+    client.send_message("/lowerarm_r", lowerarm_r_rotation)
+    client.send_message("/thigh_l", thigh_l_rotation)
+    client.send_message("/thigh_r", thigh_r_rotation)
+    client.send_message("/calf_l", calf_l_rotation)
+    client.send_message("/calf_r", calf_r_rotation)
